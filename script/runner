@@ -1,0 +1,9 @@
+APP_PATH = File.expand_path('../../config/application',  __FILE__)
+require File.expand_path('../../config/boot',  __FILE__)
+require APP_PATH
+# set Rails.env here if desired
+Rails.application.require_environment!
+start_time = Time.now
+Utilities.execute
+end_time = Time.now
+puts "The monitoring process took #{end_time - start_time} seconds to run"

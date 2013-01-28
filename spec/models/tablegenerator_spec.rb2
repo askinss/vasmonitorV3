@@ -1,0 +1,35 @@
+require 'spec_helper'
+describe Tablegenerator do
+  before(:each) do
+    @table = Tablegenerator.new([],{:Fresh_activation => [5,10,20,44]})
+  end
+
+  describe 'header_builder' do
+    it "generates table header with th tags" do 
+      @table.header_builder.should include('<th>')
+    end
+
+    it "generates table header with elements having the bold tag" do 
+      @table.header_builder.should include('<b>')
+    end
+  end
+
+  describe 'row_builder' do
+    it "generates table rows with tr and td tags" do 
+      @table.row_builder.should include('<tr><td>')
+    end
+
+    it "generates table rows with elements having the bold tag" do 
+      @table.row_builder.should include('<b>')
+    end
+  end
+
+  describe 'generate_table' do
+    it "generate a table with table tags" do
+      @table.header_builder.should include('<th>')
+      @table.row_builder.should include('<tr><td>')
+      @table.generate_table.should include('<table')
+      @table.generate_table.should include('</table>') 
+    end
+  end
+end

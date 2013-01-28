@@ -1,0 +1,5 @@
+
+Messagebuilder
+  build_message for daily
+[32m    should have h3 tags[0m
+  build_message for weekly

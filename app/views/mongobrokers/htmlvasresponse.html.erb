@@ -1,0 +1,115 @@
+<!--Select Node: <select id='nodes'>
+  <option value="" selected="selected">Select a node</option>
+  <option>Broker Hour</option>
+  <option>Broker Day</option>
+  <option>Air Hour</option>
+  <option>Air Day</option>
+  <option>Ema Hour</option>
+  <option>Ema Day</option>
+  <option>Rim Hour</option>
+  <option>Rim Day</option>
+</select><br />-->
+<div id = 'chart'>
+</div>
+
+<script type="text/javascript"  charset="utf-8">
+  $(document).ready(function(){
+      function start_date(span){
+          var start_da = null;
+          if(span == "day"){
+              start_da = <%= 1.day.ago.to_i * 1000 %>
+          }
+          else if(span == "hour"){
+              start_da = <%= 0.hour.ago.to_i * 1000 %>
+          };
+          return start_da;
+      };
+      function interval(span){
+          var start_date = null;
+          if(span == "day"){
+              start_date = <%= 1000 * 60 * 60 %> //1000 milliseconds multiplied by 60 seconds multiplied by 60 minutes makes an hour
+          }
+          else if(span == "hour"){
+              start_date = <%= 5000 * 60 %> //5000 milliseconds multiplied by 60 makes 5mins
+          };
+          return start_date;
+      };
+      function vasplot(nodename,span){
+        var chart = nodename + "_" + span
+          var col = []
+          if (nodename === 'air'){
+              col = ['#0000FF']
+          }
+          else if (nodename === 'rim'){
+              col = ['#FF4000']
+          }
+          else if (nodename === 'ema'){
+              col = ['#AA4643']
+          }
+          else if (nodename === 'broker') {
+              col = ['#3B0B0B']
+          };
+          $('#chart').append($('<div id = ' + chart + '></div'));
+              var uri = null;
+              uri = "<%= "#{request.protocol}#{request.host_with_port}" %>"
+
+          $.ajax({
+              type: "GET",
+              dataType: "json",
+              url: uri+"/mongobrokers/vasresponse?nodename="+nodename+"&span="+span,
+              error: function(XMLHttpRequest, errorTextStatus, error){
+                  alert("There is a network issue");
+              },
+              success:function(dat){  
+                  new Highcharts.Chart({
+                      chart: { renderTo: chart },
+                      title: { text: nodename.toUpperCase() + ' Response Time in the past one ' + span },
+                      xAxis: { type: 'datetime' },
+                      yAxis: {
+                      title: { text: 'Response Time'}
+                      },
+                      tooltip: {
+                          formatter: function() {
+                              return '<b>'+ this.series.name.toUpperCase() +'</b><br/>'+
+                              new Date(this.x) +': '+ this.y +'s';
+                          }
+                      },
+                      series: [{
+                          name: nodename,
+                          pointInterval: interval(span),
+                          pointStart: start_date(span),
+                          data: dat
+                      }],
+                      colors: col
+                  });
+               }
+           });
+          //$("#"+chart).hide(); //used to hide the charts an event would be added to the dropdown to show them
+      };
+
+vasplot("broker","hour");
+vasplot("air","hour");
+vasplot("ema","hour");
+vasplot("rim","hour");
+vasplot("broker","day");
+vasplot("air","day");
+vasplot("ema","day");
+vasplot("rim","day");
+$('#nodes').change(function(e){
+    $("#chart").empty(); //remove the content of the chart div so that not more than one chart can be displayed at a time
+    var node = $(e.target).val();
+    var newnode = node.toLowerCase().split(" ");//create an array from lowercase of the selected item in the node select tag
+    vasplot(newnode[0],newnode[1]);
+    });
+
+//autoreload this refreshes the page every 5 minutes
+var time = new Date().getTime();
+function refresh() {
+    if(new Date().getTime() - time >= 60000)
+      window.location.reload(true);
+    else
+      setTimeout(refresh, 120000);
+}
+setTimeout(refresh, 120000);
+});
+</script>    

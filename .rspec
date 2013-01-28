@@ -1,0 +1,5 @@
+AUTOFEATURE=false
+--colour
+--format progress
+--format documentation --out spec.txt
+--format html --out spec.html

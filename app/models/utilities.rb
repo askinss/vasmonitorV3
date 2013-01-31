@@ -120,13 +120,13 @@ class Utilities
     end
   end
 
-  def self.send_message(subject,message,sender= 'VAS REPORTS',to = Utilities.load_config['receipients'])
+  def self.send_message(subject,message,sender= "#{self.load_config['opco']} VAS REPORTS",to = Utilities.load_config['receipients'])
     msg = <<END_OF_MESSAGE
 From: #{self.load_config['opco']} #{sender} <apps@vas-consulting.com>
 To: support@vas-consulting.com <SUPPORT> 
 MIME-Version: 1.0
 Content-type: text/html
-Subject: #{subject}
+Subject:#{self.load_config['opco']} #{subject}
 
 #{message}
 

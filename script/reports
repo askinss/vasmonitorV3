@@ -4,6 +4,6 @@ require APP_PATH
 Rails.application.require_environment!
 start_time = Time.now
 #Change from_oracle to from_mysql for mysql use 
-Reporter.new.report "from_oracle" 
+Reporter.new.report "from_mysql" 
 end_time = Time.now
 puts "The reporting process took #{end_time - start_time} seconds to run"

@@ -1,9 +1,8 @@
 #add Users to receive daily reports here
-receipients: support@vas-consulting.com, BWALYADE@zm.ibm.com, Chailaem@zm.ibm.com,Sinzala@zm.ibm.com, trevor.kalubi@zm.airtel.com
-
+receipients: support@vas-consulting.com
 #ADD ADMIN MSISDNs to receive sms for downtime here
 admin_numbers: 260979411970, 260978980056
-admin_emails: BWALYADE@zm.ibm.com, Chailaem@zm.ibm.com, Masiwa Sinzala,support@vas-consulting.com
+admin_emails: support@vas-consulting.com
 
 
 
@@ -72,9 +71,9 @@ oracle_user: bblite
 oracle_password: Airtel2011
 oracle_ip: 172.27.128.122
 oracle_sid: bblitezm
-sender: Zambia VAS REPORTS <reports@vas-consulting.com>
+sender: SL VAS REPORTS <reports@vas-consulting.com>
 sender_password: passw0rd$
-opco: Zambia
+opco: Sierria Leone
 air_ip: 10.26.202.87
 air_port: 10010
 air_username: bblite_ucip
@@ -90,4 +89,6 @@ rim_username: bbliteZM
 rim_password: Airtelzm01
 test_msisdn: 260973711193
 test_imsi: 645017719123095 
-
+mysql_user: root
+mysql_password:
+mysql_database: bblite

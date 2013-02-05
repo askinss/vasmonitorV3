@@ -10,6 +10,9 @@ class Oraclequery
     username = "#{user}" 
     password = "#{pass}"
     url = "#{ip}" + "/" + "#{sid}"
+    puts "This is connection url #{url}"
+    puts "This is username #{username}"
+    puts "This is password #{password}"
     @conn = OCI8.new(username, password, url)
   end
 

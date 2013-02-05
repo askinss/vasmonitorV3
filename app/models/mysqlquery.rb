@@ -53,7 +53,7 @@ class Mysqlquery
   end
 
   def fresh_activation
-    query_block method(:query_response),"cast(date_created as date)!= CAST(NOW() - INTERVAL 1 DAY AS DATE) and cast(last_subscription_date as date) = CAST(NOW() - INTERVAL 1 DAY AS DATE) and statusid = 'Active'"
+    query_block method(:query_response),"cast(date_created as date) = CAST(NOW() - INTERVAL 1 DAY AS DATE) and cast(last_subscription_date as date) = CAST(NOW() - INTERVAL 1 DAY AS DATE) and statusid = 'Active'"
   end
 
   def total

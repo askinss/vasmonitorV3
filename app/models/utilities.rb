@@ -84,6 +84,7 @@ class Utilities
     http = Net::HTTP.new(uri.hostname, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    http.ssl_version = :SSLv3
     res = http.post(uri.path, rim_xml, {'Content-Type' => 'text/xml', 'Content-Length' => rim_xml.length.to_s, "User-Agent" => "VAS-UCIP/3.1/1.0", "Connection" => "keep-alive" })
     if res.code == '200'
       return true

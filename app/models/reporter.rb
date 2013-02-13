@@ -2,6 +2,31 @@ class Reporter
   include Airtel
   def initialize
     @subject = "Daily Reports for #{yesterday}"
+    @configured_subscriber_types = Utilities.load_config['subscriber_type'].split(",") << nil
+  end
+
+  def daily
+    message = ''
+    @configured_subscriber_types.each do |st|
+      subscribercounts = Subscriber.new(st)
+      serviceplan = subscribercounts.serviceplan.map { |x| (st.nil? ? x : x.to_s.gsub(st, "")) }
+      total_active = subscribercounts.total_active
+      total_deactivated = subscribercounts.total_deactivated
+      total = subscribercounts.total
+      fresh_activation = subscribercounts.fresh_activation
+      renewal = subscribercounts.renewal
+      total_activation = subscribercounts.total_activation
+      total_deactivation = subscribercounts.total_deactivation
+      begin
+        %w[total_active total_deactivated total fresh_activation renewal total_activation total_deactivation].each { |hash| eval(hash)[:description] = hash ;Report.create eval(hash) }
+      rescue => e
+        puts e.backtrace
+      end
+      active_and_deactivated = {:total_active => total_active.values, :total_deactivated => total_deactivated.values, :total => total.values}
+      yesterday_activations = { :fresh_activation => fresh_activation.values, :renewal => renewal.values, :total_deactivation => total_deactivation.values, :total_activation => total_activation.values}
+      message << Messagebuilder.build_message(serviceplan, active_and_deactivated, (st.nil? ? "" : st) , yesterday_activations)
+    end
+    message
   end
 
   def sender_param(param, period = "")
@@ -30,7 +55,7 @@ class Reporter
     end
   end
 
-  def report(param = "from_oracle")
+  def report
     self.sender_param(param)
     if first_day_of_the_month?
       @subject = "Monthly reports for #{last_month_to_s}"

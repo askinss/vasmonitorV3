@@ -9,7 +9,7 @@ development:
       # Provides the hosts the default session can connect to. Must be an array
       # of host:port pairs. (required)
       hosts:
-        - 172.27.130.31:27017
+        - 172.27.194.39:27017
       options:
         # Change whether the session persists in safe mode by default.
         # (default: false)
@@ -63,6 +63,6 @@ test:
     default:
       database: vasmonitor
       hosts:
-        - localhost:27017
+        - 172.27.194.39:27017
       options:
         consistency: :strong

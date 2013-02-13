@@ -3,16 +3,6 @@ class Report
   include Mongoid::Document
   include Mongoid::Timestamps::Created
 
-  def method_missing(method_sym, *arguments)
-    begin
-      puts method_sym
-      puts arguments[0].inspect
-      sum_of_hash(7, arguments[0][0], method_sym.to_s)
-    rescue
-      super
-    end
-  end
-
   def self.report_hash(no_of_days, shortcode, provisioning_type)
     hash_of_report = {}
     array_of_counts = []
@@ -38,9 +28,6 @@ class Report
 
   def self.provisioning_type
     (self.all.map { |x| x.description.gsub("_"," ").upcase }).uniq
-  end
-
-  def total_active
   end
 
 end

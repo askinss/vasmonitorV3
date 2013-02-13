@@ -16,64 +16,94 @@ class Oraclequery
   #Accepts :query_response and a query condition which would be
   #passed to the query_response method and returns an hash in the
   #format {:serviceplanid_servicetype => count(serviceplanid)}
-  def query_block(block, query)
+  def query_block(block, query, subscriber_type = nil)
     a,total_hash = [],Hash.new
-    returned_array = block.call(a, query)
-    returned_array.each do |vals|
-      total_hash[modify!(vals)] = vals[2].to_i
+    returned_array = block.call(a, query, subscriber_type)
+    if (subscriber_type == "shortcode")
+      returned_array.each do |vals|
+        total_hash["shortcode#{vals[0]}"] = vals[1].to_i
+      end
+    else
+      returned_array.each do |vals|
+        total_hash["#{subscriber_type}#{modify!(vals).to_s}"] = vals[2].to_i
+      end
     end
     total_hash
   end
 
   #the method that executes an oracle query with an empty array
   #expected and the condition to evaluate
-  def query_response(array_to_return, condition)
-    @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
-    array_to_return
+  def query_response(array_to_return, condition, subscriber_type)
+    if (subscriber_type == "prepaid")
+      @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
+      array_to_return
+    elsif (subscriber_type == "postpaid")
+      @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where postpaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
+      array_to_return
+    elsif (subscriber_type == "shortcode")
+      @conn.exec( "select shortcode,count(shortcode) from subscriber where "+ condition + " group by shortcode" ) { |x| array_to_return << x }
+      array_to_return
+    else
+      @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
+      array_to_return
+    end  
   end
 
-  #Returns all the plans subscribed to from the subscriber table in
-  #the form :serviceplanid_servicetype as an array
   def shortcodes
     a = []
-    @conn.exec("select unique serviceplanid,servicetype from subscriber") { |x| a << x }
-    a.map { |x| modify! x }
+    @conn.exec("select unique shortcode from subscriber") { |x| a << x }
+    a.map { |x| "shortcode#{x.join}" }
   end
 
-  #Returns all the active subscribers in the Subscriber table through
+  #Returns all the plans subscribed to from the subscriber table in the form :serviceplanid_servicetype as an array, for prepaid subscriber it is :serviceplanid_servicetype_prepaid, for postpaid subscriber it is :serviceplanid_servicetype_postpaid
+  def serviceplan(subscriber_type = nil)
+    a = []
+    if subscriber_type == "shortcode"
+      shortcodes 
+    elsif subscriber_type.nil?
+      @conn.exec("select unique serviceplanid,servicetype from subscriber") { |x| a << x }
+      a.map { |x| "#{subscriber_type}#{modify! x}" }
+    else
+      @conn.exec("select unique serviceplanid,servicetype from subscriber where #{subscriber_type}subscriber = 1") { |x| a << x }
+      a.map { |x| modify! x }
+    end
+  end
+
+
+  #Returns count of all the active subscribers in the Subscriber table through
   #the query_block method
-  def total_active
-    query_block method(:query_response), "statusid = 'Active'"
+  def total_active(subscriber_type = nil)
+    query_block method(:query_response), "statusid = 'Active'", subscriber_type
   end
 
   #Returns all the deactivated subscribers in the Subscriber table through
   #the query_block method
-  def total_deactivated
-    query_block method(:query_response), "statusid = 'Deactivated'"
+  def total_deactivated(subscriber_type = nil)
+    query_block method(:query_response), "statusid = 'Deactivated'", subscriber_type
   end
 
   #Returns the total activations from the previous day in the Subscriber table through the query_block method
-  def total_activation
-    query_block method(:query_response), "statusid = 'Active' and trunc(last_subscription_date) = trunc(sysdate - 1)" 
+  def total_activation(subscriber_type = nil)
+    query_block method(:query_response), "statusid = 'Active' and trunc(last_subscription_date) = trunc(sysdate - 1)", subscriber_type 
   end
 
   #Returns the total deactivations from the previous day in the Subscriber table through the query_block method
-  def total_deactivation
-    query_block method(:query_response), "statusid = 'Deactivated' and trunc(last_subscription_date) = trunc(sysdate - 1)" 
+  def total_deactivation(subscriber_type = nil)
+    query_block method(:query_response), "statusid = 'Deactivated' and trunc(last_subscription_date) = trunc(sysdate - 1)", subscriber_type 
   end
 
   #Returns all renewals from the previous day in the Subscriber table through the query_block method
-  def renewal
-    query_block method(:query_response),"trunc(date_created) != trunc(sysdate - 1) and trunc(last_subscription_date) = trunc(sysdate - 1) and statusid = 'Active'"
+  def renewal(subscriber_type = nil)
+    query_block method(:query_response),"trunc(date_created) != trunc(sysdate - 1) and trunc(last_subscription_date) = trunc(sysdate - 1) and statusid = 'Active'", subscriber_type
   end
 
   #Returns all fresh activations from the previous day in the Subscriber table through the query_block method
-  def fresh_activation
-    query_block method(:query_response), "trunc(date_created) = trunc(sysdate - 1) and trunc(last_subscription_date) = trunc(sysdate - 1) and statusid = 'Active'"
+  def fresh_activation(subscriber_type = nil)
+    query_block method(:query_response), "trunc(date_created) = trunc(sysdate - 1) and trunc(last_subscription_date) = trunc(sysdate - 1) and statusid = 'Active'", subscriber_type
   end
 
   #Returns all the subscribers in the Subscriber table through the query_block method (msisdn = msisdn) is the condition used here as there is no need to overwrite the query_block method
-  def total
-    query_block method(:query_response), "msisdn = msisdn"
+  def total(subscriber_type = nil)
+    query_block method(:query_response), "msisdn = msisdn", subscriber_type
   end
 end

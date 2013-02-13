@@ -3,6 +3,7 @@ receipients: support@vas-consulting.com
 #ADD ADMIN MSISDNs to receive sms for downtime here
 admin_numbers: 260979411970, 260978980056
 admin_emails: support@vas-consulting.com
+subscriber_type: shortcode,prepaid,postpaid
 
 
 

@@ -76,9 +76,10 @@ class Reporter
   end
 
   def report
+    message = daily
     if Utilities.load_config['enable_csv']
       Utilities.zip
-      Utilities.send_att(@subject,daily)
+      Utilities.send_att(@subject,message)
     else
       Utilities.send_message(@subject,daily,'VAS REPORTS')
     end

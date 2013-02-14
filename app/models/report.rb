@@ -27,7 +27,13 @@ class Report
   end
 
   def self.provisioning_type
-    (self.all.map { |x| x.description.gsub("_"," ").upcase }).uniq
+    self.all.map do |x|
+      begin
+        x.description.gsub("_"," ").upcase 
+      rescue NoMethodError
+        next
+      end
+    end.uniq
   end
 
 end

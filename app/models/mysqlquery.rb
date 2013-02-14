@@ -1,4 +1,5 @@
 require 'mysql2'
+require 'csv'
 class Mysqlquery
   include Airtel
 
@@ -17,11 +18,11 @@ class Mysqlquery
     returned_array = block.call(a, query, subscriber_type)
     if (subscriber_type == "shortcode")
       returned_array.each do |vals|
-        total_hash["shortcode#{vals[0]}"] = vals[1].to_i
+        total_hash["shortcode#{vals[0]}".to_sym] = vals[1].to_i
       end
     else
       returned_array.each do |vals|
-        total_hash["#{subscriber_type}#{modify!(vals).to_s}"] = vals[2].to_i
+        total_hash["#{subscriber_type}#{modify!(vals).to_s}".to_sym] = vals[2].to_i
       end
     end
     total_hash
@@ -29,15 +30,18 @@ class Mysqlquery
 
   def query_response(array_to_return, condition, subscriber_type)
     if (subscriber_type == "prepaid")
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.query("select * from subscriber where prepaidsubscriber = 1 and #{condition}").each { |sub| f << sub.values } } if Utilities.load_config['enable_csv']
       @conn.query( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where prepaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ).each { |x| array_to_return << x.values }
       array_to_return
     elsif (subscriber_type == "postpaid")
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.query("select * from subscriber where postpaidsubscriber = 1 and #{condition}").each { |sub| f << sub.values } } if Utilities.load_config['enable_csv']
       @conn.query( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where postpaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ).each { |x| array_to_return << x.values }
       array_to_return
     elsif (subscriber_type == "shortcode")
       @conn.query( "select shortcode,count(shortcode) from subscriber where "+ condition + " group by shortcode" ).each { |x| array_to_return << x.values }
       array_to_return
     else
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.query("select * from subscriber where #{condition}").each { |sub| f << sub.values } } if Utilities.load_config['enable_csv']
       @conn.query( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ).each { |x| array_to_return << x.values }
       array_to_return
     end

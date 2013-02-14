@@ -1,7 +1,4 @@
 class MongobrokersController < ApplicationController
-  before_filter :cors_preflight_check
-  after_filter :cors_set_access_control_headers
-  #dont forget to change 56800 to 3600
 
   def vasresponse
     @vasresponse = Mongobroker.response_time(params["nodename"].downcase, params["span"])

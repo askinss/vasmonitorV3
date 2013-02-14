@@ -1,4 +1,5 @@
 require 'oci8'
+require 'csv'
 class Oraclequery
   include Airtel
 
@@ -35,15 +36,18 @@ class Oraclequery
   #expected and the condition to evaluate
   def query_response(array_to_return, condition, subscriber_type)
     if (subscriber_type == "prepaid")
-      @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.exec("select * from subscriber where prepaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
+      @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where prepaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
       array_to_return
     elsif (subscriber_type == "postpaid")
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.exec("select * from subscriber where postpaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where postpaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
       array_to_return
     elsif (subscriber_type == "shortcode")
       @conn.exec( "select shortcode,count(shortcode) from subscriber where "+ condition + " group by shortcode" ) { |x| array_to_return << x }
       array_to_return
     else
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.exec("select * from subscriber where #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
       array_to_return
     end  

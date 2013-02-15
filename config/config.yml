@@ -3,6 +3,10 @@ receipients: support@vas-consulting.com
 #ADD ADMIN MSISDNs to receive sms for downtime here
 admin_numbers: 260979411970, 260978980056
 admin_emails: support@vas-consulting.com
+subscriber_type: shortcode,prepaid,postpaid
+enable_weekly: true
+enable_monthly: true
+enable_csv: true
 
 
 
@@ -66,7 +70,7 @@ admin_emails: support@vas-consulting.com
 #DO NOT TOUCH THIS PORTION IF YOU ARE NOT A STAFF OF VAS-CONSULTING
 #oracle server configuration
 nodes_to_monitor: air,ema,broker,rim
-adapter: oracle
+adapter: mysql
 oracle_user: bblite
 oracle_password: Airtel2011
 oracle_ip: 172.27.128.122

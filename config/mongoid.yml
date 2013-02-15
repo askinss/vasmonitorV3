@@ -5,11 +5,11 @@ development:
     default:
       # Defines the name of the default database that Mongoid can connect to.
       # (required).
-      database: vasmonitor
+      database: vas
       # Provides the hosts the default session can connect to. Must be an array
       # of host:port pairs. (required)
       hosts:
-        - 172.27.130.31:27017
+        - 127.0.0.1:27017
       options:
         # Change whether the session persists in safe mode by default.
         # (default: false)
@@ -63,6 +63,6 @@ test:
     default:
       database: vasmonitor
       hosts:
-        - localhost:27017
+        - 172.27.194.39:27017
       options:
         consistency: :strong

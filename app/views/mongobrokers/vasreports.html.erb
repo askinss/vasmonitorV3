@@ -1,12 +1,20 @@
-Select Bundle Type: <select id='bundles'></select><br />
-Provisioning Type: <select id='provisioning_type'></select><br />
-Number of days from yesterday to display <input type="number" maxlength='3' size='4' id='no_of_days'></input><br />
-<button id='submit'>Submit</button>
+Display by RIM services or by Shortcodes: <select id='rim_or_shortcodes'><option value="" style="display:none;"></option><option>RIM SERVICES</option><option>SHORTCODES</option></select><br />
+<div id = 'subscribertype'>
+  Select subscriber type: <select id='rimservice'><option value="" style="display:none;"></option><option>PREPAID</option><option>POSTPAID</option></select><option>TOTAL PROVISIONING</option><br />
+</div>
+<div id = 'bundleselect'>
+  Select Bundle Type: <select id='bundles'></select><br />
+  Provisioning Type: <select id='provisioning_type'></select><br />
+  Number of days from yesterday to display <input type="number" maxlength='3' size='4' id='no_of_days'></input><br />
+  <button id='submit'>Submit</button>
+</div>
 <div id = 'chart'></div>
 <script type="text/javascript"  charset="utf-8">
 $(function () {
     var chart;
     var uri = null;
+    $('#subscribertype').hide();
+    $('#bundleselect').hide();
     uri = "<%= "#{request.protocol}#{request.host_with_port}" %>";
     $(document).ready(function() {
         // define the options
@@ -47,24 +55,65 @@ $(function () {
             },
             series: []
         };
-             var bundles_select = '';
              var provisioning_select = '';
-        $.ajax({
-            type: "GET",
-            dataType: "json",
-            url: uri+"/mongobrokers/shortcode",
-            error: function(XMLHttpRequest, errorTextStatus, error){
-                  alert("There is a network issue");
-            },
-            success:function(dat){
-            jQuery.each(dat, function(key, value) {
-                bundles_select += ("<option>"+value+"</option>");
+             $('#rim_or_shortcodes').change(function(e){
+                 var opt = $(e.target).val();
+                 if (opt === "SHORTCODES"){
+                 $('#subscribertype').hide();
+                    var bundles_select = '';
+                    $('#bundleselect').show();
+                    $.ajax({
+                        type: "GET",
+                        dataType: "json",
+                        url: uri+"/mongobrokers/shortcode",
+                        error: function(XMLHttpRequest, errorTextStatus, error){
+                              alert("There is a network issue");
+                        },
+                        success:function(dat){
+                        jQuery.each(dat, function(key, value) {
+                            bundles_select += ("<option>"+value+"</option>");
+                        });
+                        $('select#bundles').empty()
+                        $('select#bundles').append(bundles_select);
+                        }
+                    });
+                   }
+                 else if (opt === "RIM SERVICES"){
+                    $('#subscribertype').show();
+                    $('#rimservice').change(function(e2){
+                        $('#bundleselect').show();
+                        $('#bundles').empty().append('');
+                        var opt2 = $(e2.target).val();
+                        var completeurl = '';
+                        if (opt2 === "PREPAID"){
+                          var bundles_select = '';
+                          completeurl = uri+"/mongobrokers/serviceplan?subscribertype=prepaid";
+                          }
+                          else if (opt2 === "POSTPAID"){
+                          var bundles_select = '';
+                          completeurl = uri+"/mongobrokers/serviceplan?subscribertype=prepaid";
+                          }
+                        $.ajax({
+                            type: "GET",
+                            dataType: "json",
+                            url: completeurl,
+                            error: function(XMLHttpRequest, errorTextStatus, error){
+                                  alert("There is a network issue");
+                            },
+                            success:function(dat){
+                            jQuery.each(dat, function(key, value) {
+                                bundles_select += ("<option>"+value+"</option>");
 
-            });
+                            });
 
-            $(bundles_select).appendTo(('select#bundles'));
-            }
-        });
+                            $('select#bundles').empty()
+                            $('select#bundles').append(bundles_select);
+                            }
+                        });
+                        });
+                 }
+                 });
+
         $.ajax({
             type: "GET",
             dataType: "json",
@@ -84,6 +133,8 @@ $(function () {
         $('button#submit').click(function() {
             var bundle = $('select#bundles').val();
             var no_of_days = $("input#no_of_days").val();
+            var plan = $('select#rimservice').val();
+            console.log(plan);
             if($('select#provisioning_type').val() === "FRESH ACTIVATION") {
                 var provisioning_type = "fresh_activation";
             }

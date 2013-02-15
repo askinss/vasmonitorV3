@@ -124,7 +124,7 @@ class Utilities
   def self.send_message(subject,message,sender= "#{self.load_config['opco']} VAS REPORTS",to = Utilities.load_config['receipients'])
     msg = <<END_OF_MESSAGE
 From: #{self.load_config['opco']} #{sender} <apps@vas-consulting.com>
-To: support@vas-consulting.com <SUPPORT> 
+To: #{to} 
 MIME-Version: 1.0
 Content-type: text/html
 Subject:#{self.load_config['opco']} #{subject}
@@ -159,4 +159,59 @@ END_OF_MESSAGE
   def self.load_config
     YAML.load_file File.join(Rails.root, 'config', 'config.yml')
   end
+
+  def self.zip
+    dir_path = File.join(Rails.root,'dumps', '/')
+    Dir.foreach(dir_path) do |f| 
+      if f != '.' && f != '..'
+        Zip::ZipFile.open("dump.zip", Zip::ZipFile::CREATE) { |zipfile|
+          zipfile.get_output_stream(f) { |file| file.puts File.read(File.join(dir_path,f)) }
+        }
+        File.delete(File.join(dir_path,f)) #delete the files after zipping them
+      end
+    end
+  end
+
+  def self.send_att(subject,message,sender= "#{self.load_config['opco']} VAS REPORTS",to = Utilities.load_config['receipients'])
+    filename = File.join(Rails.root, "dump.zip")
+    filecontent = File.read(filename)
+    encodedcontent = [filecontent].pack("m")   # base64
+    marker = "AUNIQUEMARKER"
+    part1 = <<EOF
+From: #{self.load_config['opco']} #{sender} <apps@vas-consulting.com>
+To: #{to} 
+Content-Type: multipart/mixed; boundary=#{marker}
+Subject:#{self.load_config['opco']} #{subject}
+MIME-Version: 1.0
+--#{marker}
+EOF
+    msg = <<END_OF_MESSAGE
+MIME-Version: 1.0
+Content-type: text/html
+
+#{message}
+--#{marker}
+END_OF_MESSAGE
+part3 =<<EOD
+Content-type: text/html
+Content-transfer-Encoding:base64
+Content-disposition: attachment; filename="dump.zip"
+
+#{encodedcontent}
+--#{marker}--
+EOD
+msg  = part1 + msg + part3
+    begin
+      smtp = Net::SMTP.new('smtp.gmail.com', 465)
+      smtp.enable_tls
+      smtp.set_debug_output $stderr
+      smtp.start('127.0.0.1','apps.vasconsulting@gmail.com','passw0rd$','plain') do |smtp|
+        smtp.send_message(msg,'apps.vasconsulting@gmail.com',to = Utilities.load_config['receipients'].split(","))
+      end
+    rescue => e
+      puts e.backtrace
+    end
+    File.delete(filename) #deletefile after sending
+  end
+
 end

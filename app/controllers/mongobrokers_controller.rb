@@ -1,11 +1,7 @@
 class MongobrokersController < ApplicationController
-  before_filter :cors_preflight_check
-  after_filter :cors_set_access_control_headers
-  #dont forget to change 56800 to 3600
 
   def vasresponse
     @vasresponse = Mongobroker.response_time(params["nodename"].downcase, params["span"])
-    Rails.logger.info @vasresponse
     render :json => @vasresponse
   end
 
@@ -14,13 +10,18 @@ class MongobrokersController < ApplicationController
     render :json => @vasreport
   end
 
+  def serviceplan
+    @serviceplan = Subscriber.new(params['subscribertype']).serviceplan.map { |shortcode| shortcode.to_s.gsub params['subscribertype'], "" }
+    render :json => @serviceplan 
+  end
+
   def shortcode
-    @shortcode = Oraclequery.new.shortcodes
+    @shortcode = Subscriber.new.shortcodes.map { |shortcode| shortcode.gsub "shortcode", "" }
     render :json => @shortcode
   end
 
   def provisioning_type
-    @provisioning_type = Report.provisioning_type
+    @provisioning_type = Report.provisioning_type.select { |x| (x unless x.nil?) }
     render :json => @provisioning_type
   end
 

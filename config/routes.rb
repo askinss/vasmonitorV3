@@ -2,6 +2,7 @@ Vasmonitor::Application.routes.draw do
   get 'mongobrokers/vasresponse'
   get 'mongobrokers/reports'
   get 'mongobrokers/shortcode'
+  get 'mongobrokers/serviceplan'
   get 'mongobrokers/provisioning_type'
   match 'monitor' => 'mongobrokers#htmlvasresponse'
   match 'report' => 'mongobrokers#vasreports'

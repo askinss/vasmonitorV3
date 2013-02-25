@@ -22,11 +22,11 @@ class Oraclequery
     returned_array = block.call(a, query, subscriber_type)
     if (subscriber_type == "shortcode")
       returned_array.each do |vals|
-        total_hash["shortcode#{vals[0]}"] = vals[1].to_i
+        total_hash["shortcode#{vals[0]}".to_sym] = vals[1].to_i
       end
     else
       returned_array.each do |vals|
-        total_hash["#{subscriber_type}#{modify!(vals).to_s}"] = vals[2].to_i
+        total_hash["#{subscriber_type}#{modify!(vals).to_s}".to_sym] = vals[2].to_i
       end
     end
     total_hash
@@ -56,21 +56,22 @@ class Oraclequery
   def shortcodes
     a = []
     @conn.exec("select unique shortcode from subscriber") { |x| a << x }
-    a.map { |x| "shortcode#{x.join}" }
+    a.map { |x| "shortcode#{x.join}".to_sym }
   end
 
   #Returns all the plans subscribed to from the subscriber table in the form :serviceplanid_servicetype as an array, for prepaid subscriber it is :serviceplanid_servicetype_prepaid, for postpaid subscriber it is :serviceplanid_servicetype_postpaid
   def serviceplan(subscriber_type = nil)
     a = []
     if subscriber_type == "shortcode"
-      shortcodes 
+      b = shortcodes 
     elsif subscriber_type.nil?
       @conn.exec("select unique serviceplanid,servicetype from subscriber") { |x| a << x }
-      a.map { |x| "#{subscriber_type}#{modify! x}" }
+      b = a.map { |x| "#{subscriber_type}#{modify! x}".to_sym }
     else
       @conn.exec("select unique serviceplanid,servicetype from subscriber where #{subscriber_type}subscriber = 1") { |x| a << x }
-      a.map { |x| modify! x }
+      b = a.map { |x| "#{subscriber_type}#{modify! x}".to_sym  }
     end
+    b
   end
 
 

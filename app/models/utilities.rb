@@ -164,7 +164,7 @@ END_OF_MESSAGE
     dir_path = File.join(Rails.root,'dumps', '/')
     Dir.foreach(dir_path) do |f| 
       if f != '.' && f != '..'
-        Zip::ZipFile.open("dump.zip", Zip::ZipFile::CREATE) { |zipfile|
+        Zip::ZipFile.open(File.join(Rails.root,"dump.zip"), Zip::ZipFile::CREATE) { |zipfile|
           zipfile.get_output_stream(f) { |file| file.puts File.read(File.join(dir_path,f)) }
         }
         File.delete(File.join(dir_path,f)) #delete the files after zipping them

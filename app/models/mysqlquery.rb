@@ -50,21 +50,22 @@ class Mysqlquery
   def shortcodes
     a = []
     @conn.query("select distinct shortcode from subscriber").each { |x| a << x.values }
-    a.map { |x| "shortcode#{x.join}" }
+    a.map { |x| "shortcode#{x.join}".to_sym }
   end
   
   #Returns all the plans subscribed to from the subscriber table in the form :serviceplanid_servicetype as an array, for prepaid subscriber it is :serviceplanid_servicetype_prepaid, for postpaid subscriber it is :serviceplanid_servicetype_postpaid
   def serviceplan(subscriber_type = nil)
     a = []
     if subscriber_type == "shortcode"
-      shortcodes 
+      b = shortcodes 
     elsif subscriber_type.nil?
       @conn.query("select distinct serviceplanid,servicetype from subscriber").each { |x| a << x }
-      a.map { |x| modify! x.values }
+      b = a.map { |x| modify! x.values }
     else
       @conn.query("select distinct serviceplanid,servicetype from subscriber where #{subscriber_type}subscriber = 1").each { |x| a << x }
-      a.map { |x| "#{subscriber_type}#{modify! x.values}" }
+      b = a.map { |x| "#{subscriber_type}#{modify! x.values}".to_sym }
     end
+    b 
   end
 
   def total_active(subscriber_type = nil)

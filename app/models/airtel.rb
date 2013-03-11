@@ -1,11 +1,15 @@
 require 'logger'
 require 'socket'
+require 'csv'
 module Airtel
   COMMON_YEAR_DAYS_IN_MONTH = [nil, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
   def yesterday
     (Time.now - 86400).strftime("%d/%m/%Y")
   end
 
+  def model
+    eval("#{Utilities.load_config['adapter'].capitalize}query").new
+  end
 
   def current_ip
     orig, Socket.do_not_reverse_lookup = Socket.do_not_reverse_lookup, true  # turn off reverse DNS resolution temporarily

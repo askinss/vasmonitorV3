@@ -24,6 +24,11 @@ class Mongobroker
     (self.all.map { |x| x.node }).uniq
   end
 
+  def self.daily_average_response_time(node)
+    a = self.where(node: node, :value => {'$lt' => 3.0, '$gt' => 0}, :created_at => {'$gt' => (Time.now - 86430), '$lte' => Time.now})
+    a.collect { |x| x.value }.reduce(:+)/a.size
+  end
+
   def self.hashmap_response
     hash = Hash.new
     hash[:air_hourly] = self.response_time("air", "hour")

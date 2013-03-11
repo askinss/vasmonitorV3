@@ -1,5 +1,4 @@
 require 'oci8'
-require 'csv'
 class Oraclequery
   include Airtel
 
@@ -12,6 +11,9 @@ class Oraclequery
     password = "#{pass}"
     url = "#{ip}" + "/" + "#{sid}"
     @conn = OCI8.new(username, password, url)
+    @headers = []
+    @conn.exec("select column_name from user_tab_columns where table_name='SUBSCRIBER'") { |x| @headers << x }
+    @headers.flatten! 
   end
 
   #Accepts :query_response and a query condition which would be
@@ -36,18 +38,18 @@ class Oraclequery
   #expected and the condition to evaluate
   def query_response(array_to_return, condition, subscriber_type)
     if (subscriber_type == "prepaid")
-      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.exec("select * from subscriber where prepaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where prepaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where prepaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
       array_to_return
     elsif (subscriber_type == "postpaid")
-      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.exec("select * from subscriber where postpaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where postpaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where postpaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
       array_to_return
     elsif (subscriber_type == "shortcode")
       @conn.exec( "select shortcode,count(shortcode) from subscriber where "+ condition + " group by shortcode" ) { |x| array_to_return << x }
       array_to_return
     else
-      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| @conn.exec("select * from subscriber where #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
+      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
       array_to_return
     end  
@@ -111,4 +113,17 @@ class Oraclequery
   def total(subscriber_type = nil)
     query_block method(:query_response), "msisdn = msisdn", subscriber_type
   end
+
+  def transaction
+    array_to_return = []
+    @conn.exec("select SHORTCODE,description,STATUS,count(SHORTCODE) from transactionlog where description != 'AMOUNT DEDUCTED' and description != 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by description,SHORTCODE,STATUS") { |x| x[3] = x[3].to_i; array_to_return << x.unshift(Time.now.strftime("%D"))  }
+    array_to_return 
+  end
+
+  def transaction_shortcode_success_rate
+    array_to_return = []
+    @conn.exec("select SHORTCODE,STATUS,count(SHORTCODE) from transactionlog where description = 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by SHORTCODE,STATUS") {|x| x[2] = x[2].to_i; array_to_return << x.unshift(Time.now.strftime("%D")) }
+    array_to_return 
+  end
+
 end

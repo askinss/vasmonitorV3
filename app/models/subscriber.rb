@@ -3,7 +3,7 @@ class Subscriber
   include Airtel
 
   def initialize(subscribertype = nil)
-    @model = eval("#{Utilities.load_config['adapter'].capitalize}query").new
+    @model =  model
     @subscriber_type = subscribertype
     @serviceplan = @model.serviceplan(subscribertype)
   end

@@ -96,5 +96,11 @@ class Mysqlquery
     query_block method(:query_response), "msisdn = msisdn", subscriber_type
   end
 
+  def transaction
+    array_to_return = []
+      @conn.query( "select SHORTCODE,description,STATUS,count(STATUS) from transactionlog group by description,SHORTCODE,STATUS" ).each { |x| x[3] = x[3].to_i; array_to_return << x.values }
+      array_to_return
+  end
+
 end
   

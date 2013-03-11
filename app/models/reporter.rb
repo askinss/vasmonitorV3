@@ -50,8 +50,9 @@ class Reporter
   end
 
   def report
-    message = daily
+    message ||= daily #using this to make daily run
     if Utilities.load_config['enable_csv']
+      Transaction.new.generate if Utilities.load_config['enable_transaction_report']
       Utilities.zip
       Utilities.send_att(@subject,message)
     else

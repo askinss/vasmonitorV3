@@ -3,6 +3,7 @@ require 'net/telnet'
 require 'net/smtp'
 require 'base64'
 require 'timeout'
+require 'zip/zip'
 include Airtel
 
 class Utilities

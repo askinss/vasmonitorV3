@@ -7,6 +7,7 @@ subscriber_type: shortcode,prepaid,postpaid
 enable_weekly: true
 enable_monthly: true
 enable_csv: true
+enable_transaction_report: true
 
 
 

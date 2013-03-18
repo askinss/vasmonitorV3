@@ -179,10 +179,10 @@ END_OF_MESSAGE
     encodedcontent = [filecontent].pack("m")   # base64
     marker = "AUNIQUEMARKER"
     part1 = <<EOF
-From: #{self.load_config['opco']} #{sender} <apps@vas-consulting.com>
+From: #{sender}
 To: #{to} 
 Content-Type: multipart/mixed; boundary=#{marker}
-Subject:#{self.load_config['opco']} #{subject}
+Subject:#{subject}
 MIME-Version: 1.0
 --#{marker}
 EOF
@@ -206,8 +206,8 @@ msg  = part1 + msg + part3
       smtp = Net::SMTP.new('smtp.gmail.com', 465)
       smtp.enable_tls
       smtp.set_debug_output $stderr
-      smtp.start('127.0.0.1','apps.vasconsulting@gmail.com','passw0rd$','plain') do |smtp|
-        smtp.send_message(msg,'apps.vasconsulting@gmail.com',to = Utilities.load_config['receipients'].split(","))
+      smtp.start('127.0.0.1',self.load_config['sender'],self.load_config['sender_password'],'plain') do |smtp|
+        smtp.send_message(msg,self.load_config['sender'],to = Utilities.load_config['receipients'].split(","))
       end
     rescue => e
       puts e.backtrace

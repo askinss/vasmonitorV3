@@ -116,13 +116,13 @@ class Oraclequery
 
   def transaction
     array_to_return = []
-    @conn.exec("select SHORTCODE,description,STATUS,count(SHORTCODE) from transactionlog where description != 'AMOUNT DEDUCTED' and description != 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by description,SHORTCODE,STATUS") { |x| x[3] = x[3].to_i; array_to_return << x.unshift(Time.now.strftime("%D"))  }
+    @conn.exec("select SHORTCODE,description,STATUS,count(SHORTCODE) from transactionlog where description != 'AMOUNT DEDUCTED' and description != 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by description,SHORTCODE,STATUS") { |x| x[3] = x[3].to_i; array_to_return << x.unshift((Time.now - 86400).strftime("%D"))  }
     array_to_return 
   end
 
   def transaction_shortcode_success_rate
     array_to_return = []
-    @conn.exec("select SHORTCODE,STATUS,count(SHORTCODE) from transactionlog where description = 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by SHORTCODE,STATUS") {|x| x[2] = x[2].to_i; array_to_return << x.unshift(Time.now.strftime("%D")) }
+    @conn.exec("select SHORTCODE,STATUS,count(SHORTCODE) from transactionlog where description = 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by SHORTCODE,STATUS") {|x| x[2] = x[2].to_i; array_to_return << x.unshift((Time.now - 86400).strftime("%D")) }
     array_to_return 
   end
 

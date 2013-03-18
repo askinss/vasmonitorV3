@@ -16,11 +16,11 @@ class Transaction
       x << %w[DATE SHORTCODE DESCRIPTION STATUS COUNT]
       tran.each { |v| x << v }
       3.times { x << [] } #add 3lines of space in between the next element
-      x << %w[DATE, SHORTCODE STATUS COUNT]
+      x << %w[DATE SHORTCODE STATUS COUNT]
       shortcode_sucess_rate.each { |v| x << v }
       3.times { x << [] } #add 3lines of space in between the next element
-      x << %w[DATE, NODE, AVERAGE_RESPONSE_TIME]
-      %w[air ema rim broker].collect { |node| [node.upcase,Mongobroker.daily_average_response_time(node)]}.each { |line| x << line.unshift(Time.now.strftime("%D")) }
+      x << %w[DATE NODE AVERAGE_RESPONSE_TIME]
+      %w[air ema rim broker].collect { |node| [node.upcase,Mongobroker.daily_average_response_time(node)]}.each { |line| x << line.unshift((Time.now - 86400).strftime("%D")) }
     end 
   end
 end

@@ -1,176 +1,27 @@
-Display by RIM services or by Shortcodes: <select id='rim_or_shortcodes'><option value="" style="display:none;"></option><option>RIM SERVICES</option><option>SHORTCODES</option></select><br />
-<div id = 'subscribertype'>
-  Select subscriber type: <select id='rimservice'><option value="" style="display:none;"></option><option>PREPAID</option><option>POSTPAID</option></select><option>TOTAL PROVISIONING</option><br />
-</div>
-<div id = 'bundleselect'>
-  Select Bundle Type: <select id='bundles'></select><br />
-  Provisioning Type: <select id='provisioning_type'></select><br />
-  Number of days from yesterday to display <input type="number" maxlength='3' size='4' id='no_of_days'></input><br />
-  <button id='submit'>Submit</button>
-</div>
-<div id = 'chart'></div>
-<script type="text/javascript"  charset="utf-8">
-$(function () {
-    var chart;
-    var uri = null;
-    $('#subscribertype').hide();
-    $('#bundleselect').hide();
-    uri = "<%= "#{request.protocol}#{request.host_with_port}" %>";
-    $(document).ready(function() {
-        // define the options
-        var options = {
-            chart: {
-                renderTo: 'chart'
-            },
-            legend: {
-                layout: 'vertical'
-            },
-            title: {
-                text: ''
-            },
-            xAxis: {
-                type: 'datetime',
-                maxZoom: 24 * 3600 * 1000
-            },
-            yAxis: [{ // left y axis
-                title: {
-                    text: "Number of Subscriptions"
-                },
-
-                showFirstLabel: false
-            }],
-
-            tooltip: {
-                //shared: true,
-                crosshairs: true
-            },
-    
-            plotOptions: {
-                series: {
-                    cursor: 'pointer',
-                    marker: {
-                        lineWidth: 1
-                    }
-                }
-            },
-            series: []
-        };
-             var provisioning_select = '';
-             $('#rim_or_shortcodes').change(function(e){
-                 var opt = $(e.target).val();
-                 if (opt === "SHORTCODES"){
-                 $('#subscribertype').hide();
-                    var bundles_select = '';
-                    $('#bundleselect').show();
-                    $.ajax({
-                        type: "GET",
-                        dataType: "json",
-                        url: uri+"/mongobrokers/shortcode",
-                        error: function(XMLHttpRequest, errorTextStatus, error){
-                              alert("There is a network issue");
-                        },
-                        success:function(dat){
-                        jQuery.each(dat, function(key, value) {
-                            bundles_select += ("<option>"+value+"</option>");
-                        });
-                        $('select#bundles').empty()
-                        $('select#bundles').append(bundles_select);
-                        }
-                    });
-                   }
-                 else if (opt === "RIM SERVICES"){
-                    $('#subscribertype').show();
-                    $('#rimservice').change(function(e2){
-                        $('#bundleselect').show();
-                        $('#bundles').empty().append('');
-                        var opt2 = $(e2.target).val();
-                        var completeurl = '';
-                        if (opt2 === "PREPAID"){
-                          var bundles_select = '';
-                          completeurl = uri+"/mongobrokers/serviceplan?subscribertype=prepaid";
-                          }
-                          else if (opt2 === "POSTPAID"){
-                          var bundles_select = '';
-                          completeurl = uri+"/mongobrokers/serviceplan?subscribertype=prepaid";
-                          }
-                        $.ajax({
-                            type: "GET",
-                            dataType: "json",
-                            url: completeurl,
-                            error: function(XMLHttpRequest, errorTextStatus, error){
-                                  alert("There is a network issue");
-                            },
-                            success:function(dat){
-                            jQuery.each(dat, function(key, value) {
-                                bundles_select += ("<option>"+value+"</option>");
-
-                            });
-
-                            $('select#bundles').empty()
-                            $('select#bundles').append(bundles_select);
-                            }
-                        });
-                        });
-                 }
-                 });
-
-        $.ajax({
-            type: "GET",
-            dataType: "json",
-            url: uri+"/mongobrokers/provisioning_type",
-            error: function(XMLHttpRequest, errorTextStatus, error){
-                  alert("There is a network issue");
-            },
-            success:function(dat){
-            jQuery.each(dat, function(key, value) {
-                provisioning_select += ("<option>"+value+"</option>");
-
-            });
-
-            $(provisioning_select).appendTo(('select#provisioning_type'));
-            }
-        });
-        $('button#submit').click(function() {
-            var bundle = $('select#bundles').val();
-            var no_of_days = $("input#no_of_days").val();
-            var plan = $('select#rimservice').val();
-            console.log(plan);
-            if($('select#provisioning_type').val() === "FRESH ACTIVATION") {
-                var provisioning_type = "fresh_activation";
-            }
-            else if($('select#provisioning_type').val() === "TOTAL DEACTIVATION"){
-                var provisioning_type = "total_deactivation";
-            }
-            else if($('select#provisioning_type').val() === "TOTAL ACTIVATION"){
-                var provisioning_type = "total_activation";
-            }
-            else if($('select#provisioning_type').val() === "RENEWAL"){
-                var provisioning_type = "renewal";
-            }; 
-            $.ajax({
-                type: "GET",
-                dataType: "json",
-                url: uri+"/mongobrokers/reports?no_of_days="+no_of_days+"&shortcode="+bundle+"&provisioning_type="+provisioning_type,
-                error: function(XMLHttpRequest, errorTextStatus, error){
-                      alert("There is a network issue");
-                },
-                success:function(dat){
-                jQuery.each(dat, function(key, value) {
-                    var newSeries = new Object();
-                    newSeries.name = key.replace("_", " ") + " " + $('select#provisioning_type').val();
-                    newSeries.data = value[1];
-                    newSeries.pointStart = value[0] * 1000, 
-                    newSeries.pointInterval = 1000 * 3600 * 24; //24hours = 1day
-                    options.series.push(newSeries);
-                });
-                options.title.text = provisioning_type.replace("_", " ").toUpperCase()+"S for "+bundle.replace("_", " ")+" days plan in the past "+no_of_days+" days";
-
-                chart = new Highcharts.Chart(options);
-                }
-            });
-            });
-    });
-    
-});
-
-</script>    
+<fieldset>
+  <legend>Reports</legend>
+  <div class="row" class="span12">
+    <div class="span3">
+      RIM services or Shortcodes: <select id='rimservice_or_shortcode'>
+        <option value="" style="display:none;"></option>
+        <option name="prepaid">PREPAID RIM SERVICES</option>
+        <option name="postpaid">POSTPAID RIM SERVICES</option>
+        <option name="all">ALL RIM SERVICES</option>
+        <option name="shortcode">SHORTCODES</option>
+      </select>
+    </div>
+    <div id = 'bundleselect'>
+      <div class="span3">
+        <label for='bundles'>Select Bundle Type:</label> <select id='bundles'></select>
+      </div>
+      <div class="span3">
+        <label for='provisioning_type'>Provisioning Type:</label> <select id='provisioning_type'></select>
+      </div>
+      <div class="span3">
+        <label for='no_of_days'>Number of days from yesterday:</label> <input type="number" maxlength='3'class="input-mini" id='no_of_days'></input>
+      </div>
+      <button id='submit' class='btn'>Submit</button>
+    </div>
+  </div>
+</fieldset>
+<%= render template: 'mongobrokers/_reportjs' %>

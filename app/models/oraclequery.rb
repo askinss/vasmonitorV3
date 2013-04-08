@@ -38,21 +38,18 @@ class Oraclequery
   #expected and the condition to evaluate
   def query_response(array_to_return, condition, subscriber_type)
     if (subscriber_type == "prepaid")
-      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where prepaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
+      #CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where prepaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where prepaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
-      array_to_return
     elsif (subscriber_type == "postpaid")
-      CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where postpaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
+      #CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where postpaidsubscriber = 1 and #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where postpaidsubscriber = 1 and "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
-      array_to_return
     elsif (subscriber_type == "shortcode")
       @conn.exec( "select shortcode,count(shortcode) from subscriber where "+ condition + " group by shortcode" ) { |x| array_to_return << x }
-      array_to_return
     else
       CSV.open(File.join(Rails.root, 'dumps',"#{caller[2][/`([^']*)'/, 1]}#{subscriber_type}.csv"), 'ab') { |f| f << @headers;@conn.exec("select * from subscriber where #{condition}") { |sub| f << sub } } if Utilities.load_config['enable_csv']
       @conn.exec( "select serviceplanid,servicetype,count(serviceplanid) from subscriber where "+ condition + "  group by serviceplanid,servicetype" ) { |x| array_to_return << x }
-      array_to_return
     end  
+    return array_to_return
   end
 
   def shortcodes
@@ -114,15 +111,15 @@ class Oraclequery
     query_block method(:query_response), "msisdn = msisdn", subscriber_type
   end
 
-  def transaction
+  def transaction(no_of_days = 1)
     array_to_return = []
-    @conn.exec("select SHORTCODE,description,STATUS,count(SHORTCODE) from transactionlog where description != 'AMOUNT DEDUCTED' and description != 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by description,SHORTCODE,STATUS") { |x| x[3] = x[3].to_i; array_to_return << x.unshift((Time.now - 86400).strftime("%D"))  }
+    @conn.exec("select SHORTCODE,description,STATUS,count(SHORTCODE) from transactionlog where description != 'AMOUNT DEDUCTED' and description != 'SHORTCODE' and trunc(sysdate - #{no_of_days}) = trunc(date_created) group by description,SHORTCODE,STATUS") { |x| x[3] = x[3].to_i; array_to_return << x.unshift((Time.now - 86400).strftime("%D"))  }
     array_to_return 
   end
 
-  def transaction_shortcode_success_rate
+  def transaction_shortcode_success_rate(no_of_days = 1)
     array_to_return = []
-    @conn.exec("select SHORTCODE,STATUS,count(SHORTCODE) from transactionlog where description = 'SHORTCODE' and trunc(sysdate - 1) = trunc(date_created) group by SHORTCODE,STATUS") {|x| x[2] = x[2].to_i; array_to_return << x.unshift((Time.now - 86400).strftime("%D")) }
+    @conn.exec("select SHORTCODE,STATUS,count(SHORTCODE) from transactionlog where description = 'SHORTCODE' and trunc(sysdate - #{no_of_days}) = trunc(date_created) group by SHORTCODE,STATUS") {|x| x[2] = x[2].to_i; array_to_return << x.unshift((Time.now - 86400).strftime("%D")) }
     array_to_return 
   end
 

@@ -6,17 +6,21 @@ class MongobrokersController < ApplicationController
   end
 
   def reports 
-    @vasreport = Report.report_hash(params["no_of_days"],params["shortcode"],params["provisioning_type"]).to_json
+    @vasreport = Report.report_hash(params["no_of_days"],params["shortcode"],params["provisioning_type"],params['rimservice_or_shortcode']).to_json
     render :json => @vasreport
   end
 
   def serviceplan
-    @serviceplan = Subscriber.new(params['subscribertype']).serviceplan.map { |shortcode| shortcode.to_s.gsub params['subscribertype'], "" }
+    if params['subscribertype'] == 'all'
+      @serviceplan = Subscriber.new.serviceplan.map { |shortcode| shortcode.to_s.gsub params['subscribertype'], "" }
+    else
+      @serviceplan = Subscriber.new(params['subscribertype']).serviceplan.map { |shortcode| shortcode.to_s.gsub params['subscribertype'], "" }
+    end
     render :json => @serviceplan 
   end
 
   def shortcode
-    @shortcode = Subscriber.new.shortcodes.map { |shortcode| shortcode.gsub "shortcode", "" }
+    @shortcode = Subscriber.new.shortcodes.map { |shortcode| shortcode.to_s.gsub "shortcode", "" }
     render :json => @shortcode
   end
 

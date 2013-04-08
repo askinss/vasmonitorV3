@@ -21,7 +21,7 @@ class Reporter
       active_and_deactivated = {:total_active => total_active.values, :total_deactivated => total_deactivated.values, :total => total.values}
       yesterday_activations = { :fresh_activation => fresh_activation.values, :renewal => renewal.values, :total_deactivation => total_deactivation.values, :total_activation => total_activation.values}
       begin
-        @provisioning_types.each { |hash| eval(hash)[:description] = hash ;Report.create eval(hash) }
+        @provisioning_types.each { |hash| eval(hash)[:description] = hash; eval(hash)[:rimservice_or_shortcode] = st;Report.create eval(hash) }
       rescue => e
         puts e.backtrace
       end

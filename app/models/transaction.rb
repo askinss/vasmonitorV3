@@ -1,14 +1,22 @@
 class Transaction
   include Airtel
 
-  def tran
+  def tran(no_of_days = 1)
     #Creates an hash of the nature {:shortcode => [description,status,count]}
     #model.transaction.inject({}) { |x,y| (x[y.first.to_sym] ||= []) << y[1,3]; x }
-    model.transaction
+    model.transaction(no_of_days)
   end
 
-  def shortcode_sucess_rate
-    model.transaction_shortcode_success_rate.sort
+  def tran_hash(no_of_days = 1)
+    model.transaction(no_of_days).inject({}) { |x,y| (x[y[1].to_sym] ||= []) << y[2,4]; x }
+  end
+
+  def shortcode_sucess_rate_hash(no_of_days = 1)
+    model.transaction_shortcode_success_rate(no_of_days).inject({}) { |x,y| (x[y[1].to_sym] ||= []) << y[2,4]; x }
+  end
+
+  def shortcode_sucess_rate(no_of_days = 1)
+    model.transaction_shortcode_success_rate(no_of_days)
   end
 
   def generate

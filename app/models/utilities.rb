@@ -57,16 +57,16 @@ class Utilities
   end
 
   def self.ema_response
-    resp1,resp2 = '','',''
+    resp1,resp2,resp3 = '','',''
     ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
                            "Port" => self.load_config['ema_port'],
                            "Timeout" => 10,
                            "Prompt" => /Enter command:/)
     ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};") 
-    ema.cmd("GET:HLRSUB:MSISDN,#{self.load_config['test_msisdn']}:IMSI;") 
+    ema.cmd("GET:HLRSUB:MSISDN,#{self.load_config['test_msisdn']}:IMSI;")  { |x| resp3 << x }
     ema_response = ema.cmd("LOGOUT;\n") { |x| resp2 << x }
     ema.close
-    if ema_response.include?(self.load_config['test_imsi'].to_s)
+    if (ema_response.include?(self.load_config['test_imsi'].to_s) || resp3.include?(self.load_config['test_imsi'].to_s))
       return true
     else
       return false
@@ -122,7 +122,7 @@ class Utilities
     end
   end
 
-  def self.send_message(subject,message,sender= "#{self.load_config['opco']} VAS REPORTS",to = Utilities.load_config['receipients'])
+  def self.send_message(subject,message,sender = "#{self.load_config['opco']} VAS REPORTS",to = Utilities.load_config['admin_emails'])
     msg = <<END_OF_MESSAGE
 From: #{self.load_config['opco']} #{sender} <apps@vas-consulting.com>
 To: #{to} 
@@ -138,7 +138,7 @@ END_OF_MESSAGE
       smtp.enable_tls
       smtp.set_debug_output $stderr
       smtp.start('127.0.0.1','apps.vasconsulting@gmail.com','passw0rd$','plain') do |smtp|
-        smtp.send_message(msg,'monitor@vas-consulting.com',to = Utilities.load_config['receipients'].split(","))
+        smtp.send_message(msg,'monitor@vas-consulting.com',to.split(","))
       end
     rescue => e
       puts e.backtrace
@@ -207,7 +207,7 @@ msg  = part1 + msg + part3
       smtp.enable_tls
       smtp.set_debug_output $stderr
       smtp.start('127.0.0.1',self.load_config['sender'],self.load_config['sender_password'],'plain') do |smtp|
-        smtp.send_message(msg,self.load_config['sender'],to = Utilities.load_config['receipients'].split(","))
+        smtp.send_message(msg,self.load_config['sender'],to.split(","))
       end
     rescue => e
       puts e.backtrace

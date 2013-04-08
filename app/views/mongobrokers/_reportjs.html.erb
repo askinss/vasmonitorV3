@@ -1,0 +1,119 @@
+<div id = 'chart'></div>
+<script type="text/javascript"  charset="utf-8">
+$(function () {
+    var chart;
+    var uri = null;
+    $('#subscribertype').hide();
+    $('#bundleselect').hide();
+    uri = "<%= "#{request.protocol}#{request.host_with_port}" %>";
+    $(document).ready(function() {
+        // define the options
+        var options = {
+            chart: {
+                renderTo: 'chart'
+            },
+            legend: {
+                layout: 'vertical'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                type: 'datetime',
+                maxZoom: 24 * 3600 * 1000
+            },
+            yAxis: [{ // left y axis
+                title: {
+                    text: "Number of Subscriptions"
+                },
+
+                showFirstLabel: false
+            }],
+
+            tooltip: {
+                //shared: true,
+                crosshairs: true
+            },
+    
+            plotOptions: {
+                series: {
+                    cursor: 'pointer',
+                    marker: {
+                        lineWidth: 1
+                    }
+                }
+            },
+            series: []
+        };
+             var provisioning_select = '';
+             $('#rimservice_or_shortcode').change(function(e){
+                 var opt = $('option:selected', this).attr("name");
+                    var bundles_select = '';
+                    $('#bundleselect').show();
+                    $.ajax({
+                        type: "GET",
+                        dataType: "json",
+                        url: uri+"/mongobrokers/serviceplan?subscribertype="+opt,
+                        error: function(XMLHttpRequest, errorTextStatus, error){
+                              alert("There is a network issue");
+                              $('#bundleselect').hide();
+                        },
+                        success:function(dat){
+                          jQuery.each(dat, function(key, value) {
+                            bundles_select += ("<option>"+value+"</option>");
+                            });
+                          $('select#bundles').empty()
+                          $('select#bundles').append(bundles_select);
+                        }
+                    });
+                 });
+        $.ajax({
+            type: "GET",
+            dataType: "json",
+            url: uri+"/mongobrokers/provisioning_type",
+            error: function(XMLHttpRequest, errorTextStatus, error){
+                  alert("There is a network issue");
+            },
+            success:function(dat){
+            jQuery.each(dat, function(key, value) {
+                provisioning_select += ("<option>"+value+"</option>");
+
+            });
+
+            $(provisioning_select).appendTo(('select#provisioning_type'));
+            }
+        });
+        $('button#submit').click(function() {
+            var bundle = $('select#bundles').val();
+            var no_of_days = $("input#no_of_days").val();
+            var plan = $('select#rimservice').val();
+            var rimservice_or_shortcode = $('select#rimservice_or_shortcode  option:selected').attr('name');
+            var provisioning_type = $('select#provisioning_type').val().toLowerCase().replace(" ", "_");
+
+            $.ajax({
+                type: "GET",
+                dataType: "json",
+                url: uri+"/mongobrokers/reports?no_of_days="+no_of_days+"&shortcode="+bundle+"&provisioning_type="+provisioning_type+"&rimservice_or_shortcode="+rimservice_or_shortcode,
+                error: function(XMLHttpRequest, errorTextStatus, error){
+                      alert("An error occured please try again or report to the admin");
+                },
+                success:function(dat){
+                jQuery.each(dat, function(key, value) {
+                    var newSeries = new Object();
+                    newSeries.name = key.replace("_", " ") + " " + $('select#provisioning_type').val();
+                    newSeries.data = value[1];
+                    newSeries.pointStart = value[0] * 1000, 
+                    newSeries.pointInterval = 1000 * 3600 * 24; //24hours = 1day
+                    options.series.push(newSeries);
+                });
+                options.title.text = provisioning_type.replace("_", " ").toUpperCase()+"S for "+bundle.replace("_", " ")+" days plan in the past "+no_of_days+" days";
+
+                chart = new Highcharts.Chart(options);
+                }
+            });
+            });
+    });
+    
+});
+
+</script>    

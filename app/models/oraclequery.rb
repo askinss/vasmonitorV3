@@ -123,4 +123,12 @@ class Oraclequery
     array_to_return 
   end
 
+  def conn
+    @conn
+  end
+
+  def logoff
+    @conn.logoff
+  end
+
 end

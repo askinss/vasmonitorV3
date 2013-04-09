@@ -51,4 +51,12 @@ class Subscriber
   def total
     query_helper __method__
   end
+
+  def conn
+    @model.conn
+  end
+
+  def logoff
+    @model.logoff
+  end
 end

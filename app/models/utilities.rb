@@ -57,14 +57,14 @@ class Utilities
   end
 
   def self.ema_response
-    resp1,resp2,resp3 = '','',''
     ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
                            "Port" => self.load_config['ema_port'],
                            "Timeout" => 10,
                            "Prompt" => /Enter command:/)
-    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};") 
-    ema.cmd("GET:HLRSUB:MSISDN,#{self.load_config['test_msisdn']}:IMSI;")  { |x| resp3 << x }
-    ema_response = ema.cmd("LOGOUT;\n") { |x| resp2 << x }
+    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};")
+    ema.waitfor(/Enter command:/)
+    ema_response = ema.cmd("GET:HLRSUB:MSISDN,#{self.load_config['test_msisdn']}:IMSI;")
+    ema.cmd("LOGOUT;\n") 
     ema.close
     if (ema_response.include?(self.load_config['test_imsi'].to_s) || resp3.include?(self.load_config['test_imsi'].to_s))
       return true

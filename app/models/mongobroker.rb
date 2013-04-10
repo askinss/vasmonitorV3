@@ -26,7 +26,7 @@ class Mongobroker
 
   def self.daily_average_response_time(node)
     a = self.where(node: node, :value => {'$lt' => 3.0, '$gt' => 0}, :created_at => {'$gt' => (Time.now - 86430), '$lte' => Time.now})
-    a.nil? 0 : (a.collect { |x| x.value }.reduce(:+)/a.size)
+    a.nil? ? (return 0) : (return (a.collect { |x| x.value }.reduce(:+)/a.size))
   end
 
   def self.hashmap_response

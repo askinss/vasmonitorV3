@@ -8,6 +8,7 @@ enable_weekly: true
 enable_monthly: true
 enable_csv: true
 enable_transaction_report: true
+enable_activity_report: true
 
 
 

@@ -26,6 +26,7 @@ class Reporter
         puts e.backtrace
       end
       message << Messagebuilder.build_message(serviceplan, active_and_deactivated, (st.nil? ? "" : st) , yesterday_activations)
+      subscribercounts.logoff
     end
     message
   end
@@ -52,7 +53,10 @@ class Reporter
   def report
     message ||= daily #using this to make daily run
     if Utilities.load_config['enable_csv']
-      Transaction.new.generate if Utilities.load_config['enable_transaction_report']
+      trans = Transaction.new
+      activity = Activity.new
+      trans.generate if Utilities.load_config['enable_transaction_report']
+      activity.generate if Utilities.load_config['enable_activity_report']
       Utilities.zip
       Utilities.send_att(@subject,message)
     else

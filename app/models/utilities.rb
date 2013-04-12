@@ -66,11 +66,29 @@ class Utilities
     ema_response = ema.cmd("GET:HLRSUB:MSISDN,#{self.load_config['test_msisdn']}:IMSI;")
     ema.cmd("LOGOUT;\n") 
     ema.close
-    if (ema_response.include?(self.load_config['test_imsi'].to_s) || resp3.include?(self.load_config['test_imsi'].to_s))
+    if (ema_response.include?(self.load_config['test_imsi'].to_s))
       return true
     else
       return false
     end
+  end
+
+  def self.get_imsis(msisdn)
+    ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
+                           "Port" => self.load_config['ema_port'],
+                           "Timeout" => 10,
+                           "Prompt" => /Enter command:/)
+    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};")
+    ema.waitfor(/Enter command:/)
+    msisdn_and_imsi = []
+      msisdn.each do |msi| 
+      resp = ema.cmd("GET:HLRSUB:MSISDN,#{msi}:IMSI;").match(/RESP:(?<respcode>\d+):MSISDN,(?<msisdn>\d+):IMSI,(?<imsi>\d+);/)
+      unless resp.nil?
+        (resp[:respcode] == "0" && resp[:msisdn] == msi) ? (msisdn_and_imsi << [msi,resp[:imsi]]) : next
+      end
+    end
+    ema.close
+    msisdn_and_imsi
   end
 
   def self.rim_response
@@ -215,4 +233,75 @@ msg  = part1 + msg + part3
     File.delete(filename) #deletefile after sending
   end
 
+  def self.batch_deactivated(imsi) #array of IMSIs should be supplied
+    rimurl = 'https://' + self.load_config['rim_url'] + '/ari/submitXML'
+    threads = []
+    imsi.flatten.each_slice(100).each do |msis|
+      threads << Thread.new(msis) do |threaded_imsi_arr|
+        threaded_imsi_arr.each do |threaded_imsi|
+          begin
+            rim_xml = "<?xml version='1.0' ?><!DOCTYPE ProvisioningRequest SYSTEM 'ProvisioningRequest.dtd'>"+"<ProvisioningRequest TransactionId='"+TRANSACTIONID+"' Version='1.2' TransactionType='Cancel' ProductType='BlackBerry'><Header><Sender id='101' name='WirelessCarrier'><Login>"+self.load_config['rim_username']+"</Login><Password>"+self.load_config['rim_password']+"</Password></Sender><TimeStamp>"+Time.now.strftime("%Y-%m-%dT%TZ")+"</TimeStamp></Header><Body><ProvisioningEntity name='subscriber'><ProvisioningDataItem name='BillingId'>"+threaded_imsi+"</ProvisioningDataItem></ProvisioningEntity></Body></ProvisioningRequest>"
+            uri = URI(rimurl)
+            http = Net::HTTP.new(uri.hostname, uri.port)
+            http.use_ssl = true
+            http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+            http.ssl_version = :SSLv3
+            res = http.post(uri.path, rim_xml, {'Content-Type' => 'text/xml', 'Content-Length' => rim_xml.length.to_s, "User-Agent" => "VAS-UCIP/3.1/1.0", "Connection" => "keep-alive" })
+            if res.code == '200'
+              puts "Deactivated #{threaded_imsi}"
+              File.open(File.join(Rails.root, 'dumps','deactivated_imsis'), 'ab') { |f| f.puts threaded_imsi }
+            else 
+              File.open(File.join(Rails.root, 'dumps','fail_to_deactivate_imsis'), 'ab') { |f| f.puts threaded_imsi }
+            end
+          rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError, Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => e
+            File.open(File.join(Rails.root, 'dumps','exceptions'), 'ab') { |f| f.puts e.backtrace }
+          end
+        end
+      end
+    end
+    threads.each { |thread| thread.join }
+  end
+
+  def self.get_accurate_imsis_deactivated_a_month_ago
+    a = Subscriber.new
+    msisdn_and_imsi = []
+    threads = []
+    msisdn = []
+    a.conn.exec("select msisdn from subscriber where next_subscription_date < (sysdate - 30) and statusid = 'Deactivated'") { |x| msisdn << x }
+    a.logoff
+    msisdn.flatten!.each_slice(1000).each do  |msis|
+      threads << Thread.new(msis) do |threaded_imsi|
+        begin
+          Utilities.get_imsis(threaded_imsi).each { |msi_imsi| msisdn_and_imsi << msi_imsi }
+        rescue Timeout::Error => e
+          retry
+        end
+      end
+    end
+    threads.each { |thread| thread.join }
+    msisdn_and_imsi.each do |msi_and_imsi| 
+      CSV.open(File.join(Rails.root, 'dumps','msisdn_and_imsis_deactivated_a_month_ago.csv'), 'ab') do |row|
+        row << msi_and_imsi
+      end
+    end  
+    msisdn_and_imsi
+  end
+
+  def self.get_active_ems_imsi
+    imsi = []; CSV.foreach(File.join(Rails.root, 'ems.csv'), :headers => true) { |x| (imsi << x[4]) if x[9] == 'Active' }; imsi
+  end
+
+  def self.get_deactivated_imsi_active_in_ems
+    a = Subscriber.new
+    imsi = []
+    a.conn.exec("select imsi from subscriber where statusid != 'Active' and servicetype != 1") { |x| imsi << x[0] } #ommiting one day plan subscribers
+    a.logoff
+    deactivated_imsi_active_in_ems = (imsi & self.get_active_ems_imsi)
+    deactivated_imsi_active_in_ems.each { |imsi_to_be_deactivated| File.open('/home/bblite/imsi_to_be_deactivated', 'ab') { |f| f.puts imsi_to_be_deactivated } }
+    deactivated_imsi_active_in_ems
+  end
+
+  def self.deactivate_imsis_deactivated_for_over_a_month
+    self.batch_deactivated(self.get_accurate_imsis_deactivated_a_month_ago.collect { |row| row[1] })
+  end
 end

@@ -25,7 +25,7 @@ class Utilities
     else
       self.sendsms("#{node.upcase} is not responding!!!!, please act fast")
       Rails.logger.info("#{node.upcase} is not responding!!!!, please act fast") 
-      self.send_message("#{node.upcase} is not responding!!!","Dear Support,\n\n#{node.upcase} is down, please respond\nRegards,\nVAS Apps", 'VAS MONITOR', self.load_config['admin_emails'].split(","))
+      self.send_message("#{node.upcase} is not responding!!!","Dear Support,\n\n#{node.upcase} is down, please respond\nRegards,\nVAS Apps", "#{self.load_config['opco']} VAS MONITOR", self.load_config['admin_emails'])
       if node.downcase == "broker"
         #do nothing this is to remove unnecessary panic
       end
@@ -141,7 +141,7 @@ class Utilities
 
   def self.send_message(subject,message,sender = "#{self.load_config['opco']} VAS REPORTS",to = Utilities.load_config['admin_emails'])
     msg = <<END_OF_MESSAGE
-From: #{self.load_config['opco']} #{sender} 
+From: #{sender} 
 To: #{to} 
 MIME-Version: 1.0
 Content-type: text/html
@@ -154,10 +154,11 @@ END_OF_MESSAGE
       smtp = Net::SMTP.new('smtp.gmail.com', 465)
       smtp.enable_tls
       smtp.set_debug_output $stderr
-      smtp.start('127.0.0.1',self.load_config['sender'],self.load_config['password'],'plain') do |smtp|
+      smtp.start('127.0.0.1',self.load_config['sender'],self.load_config['sender_password'],'plain') do |smtp|
         smtp.send_message(msg,self.load_config['sender'],to.split(","))
       end
     rescue => e
+      puts e.backtrace
       Rails.logger.error e.backtrace
     end
   end
@@ -228,6 +229,7 @@ msg  = part1 + msg + part3
       end
     rescue => e
       puts e.backtrace
+      Rails.logger.error e.backtrace
     end
     File.delete(filename) #deletefile after sending
   end

@@ -1,7 +1,7 @@
 class Activity
-  include Airtel
   include Mongoid::Document
   include Mongoid::Timestamps::Created
+  include Airtel
   field :_id
   field :msisdn
   field :date_created

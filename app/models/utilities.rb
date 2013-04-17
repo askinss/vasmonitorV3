@@ -24,11 +24,10 @@ class Utilities
       return time_taken
     else
       self.sendsms("#{node.upcase} is not responding!!!!, please act fast")
+      Rails.logger.info("#{node.upcase} is not responding!!!!, please act fast") 
       self.send_message("#{node.upcase} is not responding!!!","Dear Support,\n\n#{node.upcase} is down, please respond\nRegards,\nVAS Apps", 'VAS MONITOR', self.load_config['admin_emails'].split(","))
       if node.downcase == "broker"
-        self.sendsms("#{node.upcase} is about to be restarted")
-        `bash #{Rails.root}/script/sdprestart.sh`
-        self.sendsms("#{node.upcase} has restarted, please run ps -ef | grep SDP-server to confirm there is only one active SDP-server process")
+        #do nothing this is to remove unnecessary panic
       end
       return 0
     end
@@ -142,7 +141,7 @@ class Utilities
 
   def self.send_message(subject,message,sender = "#{self.load_config['opco']} VAS REPORTS",to = Utilities.load_config['admin_emails'])
     msg = <<END_OF_MESSAGE
-From: #{self.load_config['opco']} #{sender} <apps@vas-consulting.com>
+From: #{self.load_config['opco']} #{sender} 
 To: #{to} 
 MIME-Version: 1.0
 Content-type: text/html
@@ -155,11 +154,11 @@ END_OF_MESSAGE
       smtp = Net::SMTP.new('smtp.gmail.com', 465)
       smtp.enable_tls
       smtp.set_debug_output $stderr
-      smtp.start('127.0.0.1','apps.vasconsulting@gmail.com','passw0rd$','plain') do |smtp|
-        smtp.send_message(msg,'monitor@vas-consulting.com',to.split(","))
+      smtp.start('127.0.0.1',self.load_config['sender'],self.load_config['password'],'plain') do |smtp|
+        smtp.send_message(msg,self.load_config['sender'],to.split(","))
       end
     rescue => e
-      puts e.backtrace
+      Rails.logger.error e.backtrace
     end
   end
 
@@ -167,7 +166,7 @@ END_OF_MESSAGE
     self.load_config['nodes_to_monitor'].split(",").each do |node|
       if self.singleton_methods.include?("#{node}_response".to_sym)
         Mongobroker.create!(:value => self.response_time(node), :node => node.downcase)
-        puts node
+        Rails.logger.info node
       else
         self.sendsms("Please consult the VASCON team to include #{node} for monitoring")
         next

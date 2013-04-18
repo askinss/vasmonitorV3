@@ -9,7 +9,7 @@ class Report
     hash_of_report = {}
     array_of_counts = []
     iterator = 0
-    start_date = Report.asc(:created_at).where(created_at: { '$gte' => (Time.now - no_of_days.to_i * 86400) }, description: provisioning_type, provisioning_type: rimservice_or_shortcode).each do |x| 
+    start_date = Report.asc(:created_at).where(created_at: { '$gte' => (Time.now - no_of_days.to_i * 86400) }, description: provisioning_type, rimservice_or_shortcode: rimservice_or_shortcode).each do |x| 
       (array_of_counts << x.attributes[shortcode.to_s])
     end.first.created_at.to_i - 86400
     hash_of_report[shortcode] = [start_date,array_of_counts]

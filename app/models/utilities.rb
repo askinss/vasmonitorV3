@@ -65,7 +65,7 @@ class Utilities
     ema_response = ema.cmd("GET:HLRSUB:MSISDN,#{self.load_config['test_msisdn']}:IMSI;")
     ema.cmd("LOGOUT;\n") 
     ema.close
-    if (ema_response.include?(self.load_config['test_imsi'].to_s))
+    if (ema_response.match(/RESP:\d+:MSISDN,\d+:IMSI,\d+;/))
       return true
     else
       return false

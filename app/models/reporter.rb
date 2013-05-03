@@ -52,7 +52,7 @@ class Reporter
 
   def sms_report
     sub = Subscriber.new
-    Utilities.sendsms "BB Subscriptions for #{yesterday}:\n Fresh Activations = #{sub.total_fresh_activation_count}\n Renewal: #{sub.total_renewal_count}\n Total Activation: #{sub.total_activation_count}\n Total Deactivation: #{sub.total_deactivation_count}", Utilities.load_config['receipients_numbers']
+    Utilities.sendsms "BB Subscriptions for #{yesterday}:\n Fresh Activations = #{sub.total_fresh_activation_count}\n Renewal= #{sub.total_renewal_count}\n Total Activation= #{sub.total_activation_count}\n Total Deactivation: #{sub.total_deactivation_count}", Utilities.load_config['receipients_numbers']
     sub.logoff
   end
 

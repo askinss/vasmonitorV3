@@ -131,4 +131,28 @@ class Oraclequery
     @conn.logoff
   end
 
+  def total_fresh_activation_count
+    x = 0
+    @conn.exec("select count(*) from subscriber where trunc(date_created) = trunc(sysdate - 1) and statusid = 'Active' and trunc(last_subscription_date) = trunc(sysdate - 1)") { |y| x = y[0].to_i }
+    x
+  end
+
+  def total_renewal_count
+    x = 0
+    @conn.exec("select count(*) from subscriber where trunc(last_subscription_date) = trunc(sysdate - 1) and statusid = 'Active' and trunc(date_created) != trunc(sysdate - 1)") { |y| x = y[0].to_i }
+    x
+  end
+
+  def total_deactivation_count
+    x = 0
+    @conn.exec("select count(*) from subscriber where trunc(last_subscription_date) = trunc(sysdate - 1) and statusid != 'Active'") { |y| x = y[0].to_i }
+    x
+  end
+
+  def total_activation_count
+    x = 0
+    @conn.exec("select count(*) from subscriber where trunc(last_subscription_date) = trunc(sysdate - 1) and statusid = 'Active'") { |y| x = y[0].to_i }
+    x
+  end
+
 end

@@ -1,5 +1,6 @@
 #add Users to receive daily reports here
 receipients: support@vas-consulting.com
+receipients_numbers: 255783224291
 #ADD ADMIN MSISDNs to receive sms for downtime here
 admin_numbers: 260979411970, 260978980056
 admin_emails: support@vas-consulting.com
@@ -9,6 +10,7 @@ enable_monthly: true
 enable_csv: true
 enable_transaction_report: true
 enable_activity_report: true
+send_sms_report: true
 
 
 

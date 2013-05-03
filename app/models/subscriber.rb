@@ -59,4 +59,20 @@ class Subscriber
   def logoff
     @model.logoff
   end
+
+  def total_fresh_activation_count
+    @model.total_fresh_activation_count
+  end
+
+  def total_renewal_count
+    @model.total_renewal_count
+  end
+
+  def total_deactivation_count
+    @model.total_deactivation_count
+  end
+  
+  def total_activation_count
+    @model.total_activation_count
+  end
 end

@@ -10,6 +10,7 @@ class Utilities
 
   TRANSACTIONID = (rand(100000)/777.0).to_f.round(8).to_s.gsub(/\w+\./, "")
   RIM_TIME = Time.now.strftime("%Y-%m-%dT%H:%M:%SZ")
+  SCHEDULER_SERVER_LOGS_PATH = '/home/bblite/SDP-Scheduler-server/logs/catalina.out'
 
   def self.response_time(node)
     start_time = Time.now
@@ -31,6 +32,14 @@ class Utilities
       end
       return 0
     end
+  end
+
+  def self.scheduler_response
+    found = false
+    time = Time.now.strftime('%Y-%m-%d %H')
+    time_in_last_hour = (Time.now - 3600).strftime('%Y-%m-%d %H')
+    File.foreach(SCHEDULER_SERVER_LOGS_PATH) { |x| (found = true; break) if x.match(/(#{time}|#{time_in_last_hour}).*Hourly\ Scheduler\ .*for\ this\ hour/) }
+    return found
   end
 
   def self.air_response
@@ -88,6 +97,25 @@ class Utilities
     end
     ema.close
     msisdn_and_imsi
+  end
+
+  def self.iat_response
+    iaturl = 'http://' + self.load_config['iat_url'] + '/'
+    iat_xml = "<?xml version='1.0' ?><!DOCTYPE ProvisioningRequest SYSTEM 'ProvisioningRequest.dtd'>" +\
+      "<ProvisioningRequest TransactionId='"+TRANSACTIONID+"' Version='1.2' TransactionType='Status' ProductType='BlackBerry'>" +\
+      "<Header><Sender id='101' name='WirelessCarrier'><Login>"+self.load_config['iat_username'] +"</Login><Password>"+self.load_config['iat_password']+"</Password>"+\
+      "</Sender><TimeStamp>"+RIM_TIME+"</TimeStamp></Header><Body><ProvisioningEntity name='subscriber'>" +\
+      "<ProvisioningDataItem name='BillingId'>"+self.load_config['test_imsi'].to_s+"</ProvisioningDataItem></ProvisioningEntity>" +\
+      "</Body></ProvisioningRequest>"
+    uri = URI(iaturl)
+    http = Net::HTTP.new(uri.hostname, uri.port)
+    res = http.post(uri.path, iat_xml, {'Content-Type' => 'text/xml', 'Content-Length' => iat_xml.length.to_s, "User-Agent" => "VAS-UCIP/3.1/1.0", "Connection" => "keep-alive" })
+    if res.code == '200'
+      return true
+    else 
+      return false
+    end
+    #xmldoc = Document.new res.body
   end
 
   def self.rim_response

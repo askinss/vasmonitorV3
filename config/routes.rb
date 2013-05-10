@@ -4,6 +4,7 @@ Vasmonitor::Application.routes.draw do
   get 'mongobrokers/shortcode'
   get 'mongobrokers/serviceplan'
   get 'mongobrokers/provisioning_type'
+  post 'mongobrokers/rimtest'
   match 'monitor' => 'mongobrokers#htmlvasresponse'
   match 'report' => 'mongobrokers#vasreports'
   # The priority is based upon order of creation:

@@ -5,6 +5,10 @@ class MongobrokersController < ApplicationController
     render :json => @vasresponse
   end
 
+  def rimtest
+    render nothing: true, status: 404
+  end
+
   def reports 
     @vasreport = Report.report_hash(params["no_of_days"],params["shortcode"],params["provisioning_type"],params['rimservice_or_shortcode']).to_json
     render :json => @vasreport

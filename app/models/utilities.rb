@@ -35,6 +35,7 @@ class Utilities
   end
 
   def self.scheduler_response
+    (return true) if (File.size SCHEDULER_SERVER_LOGS_PATH) < 100000 #Return true if file size is less than 100kb
     found = false
     time = Time.now.strftime('%Y-%m-%d %H')
     time_in_last_hour = (Time.now - 3600).strftime('%Y-%m-%d %H')

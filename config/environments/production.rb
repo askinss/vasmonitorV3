@@ -60,5 +60,8 @@ Vasmonitor::Application.configure do
 
   # Send deprecation notices to registered listeners
   config.active_support.deprecation = :notify
+  
+  #load folders in models directory
+  config.autoload_paths += Dir[Rails.root.join('app', 'models', '**/')]
 
 end

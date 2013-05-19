@@ -28,4 +28,7 @@ Vasmonitor::Application.configure do
 
   # Expands the lines which load the assets
   config.assets.debug = true
+
+  #load folders in models directory
+  config.autoload_paths += Dir[Rails.root.join('app', 'models', '**/')]
 end

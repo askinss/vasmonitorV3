@@ -15,13 +15,13 @@ class Utilities
   def self.response_time(node)
     start_time = Time.now
     begin
-      block_response = Timeout::timeout(10) { eval("Utilities.#{node}_response") }
+      block_response = Timeout::timeout(60) { eval("Utilities.#{node}_response") }
     rescue 
       block_response = false
     end
     end_time = Time.now
     time_taken = (end_time - start_time).round(4)
-    if block_response && (time_taken < 10)
+    if block_response && (time_taken < 60)
       return time_taken
     else
       self.sendsms("#{node.upcase} is not responding!!!!, please act fast")
@@ -38,8 +38,9 @@ class Utilities
     (return true) if (File.size SCHEDULER_SERVER_LOGS_PATH) < 100000 #Return true if file size is less than 100kb
     found = false
     time = Time.now.strftime('%Y-%m-%d %H')
-    time_in_last_hour = (Time.now - 3600).strftime('%Y-%m-%d %H')
-    File.foreach(SCHEDULER_SERVER_LOGS_PATH) { |x| (found = true; break) if x.match(/(#{time}|#{time_in_last_hour}).*Hourly\ Scheduler\ .*for\ this\ hour/) }
+    time_in_last_hour = 1.hour.ago.strftime('%Y-%m-%d %H')
+    time_in_last_2hours = 2.hour.ago.strftime('%Y-%m-%d %H')
+    File.foreach(SCHEDULER_SERVER_LOGS_PATH) { |x| (found = true; break) if x.match(/(#{time}|#{time_in_last_hour}|#{time_in_last_2hours}).*Hourly\ Scheduler\ .*for\ this\ hour/) }
     return found
   end
 
@@ -80,6 +81,73 @@ class Utilities
     else
       return false
     end
+  end
+
+  def self.nam_reset msisdn
+    ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
+                           "Port" => self.load_config['ema_port'],
+                           "Timeout" => 10,
+                           "Prompt" => /Enter command:/)
+    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};")
+    ema.waitfor(/Enter command:/)
+    ema_response = ema.cmd("SET:HLRSUB:MSISDN,#{msisdn}:NAM,1;")
+    puts ema_response
+    ema_response1 = ema.cmd("SET:HLRSUB:MSISDN,#{msisdn}:NAM,0;")
+    puts ema_response1
+    ema.cmd("LOGOUT;\n") 
+    ema.close
+  end
+
+  def self.get_imei msisdn
+    ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
+                           "Port" => self.load_config['ema_port'],
+                           "Timeout" => 10,
+                           "Prompt" => /Enter command:/)
+    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};")
+    ema.waitfor(/Enter command:/)
+    ema_response = ema.cmd("GET:HLRSUB:MSISDN,#{msisdn}:IMEISV;")
+    ema.cmd("LOGOUT;\n") 
+    ema.close
+    ema_response
+  end
+
+  def self.add_apn msisdn
+    ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
+                           "Port" => self.load_config['ema_port'],
+                           "Timeout" => 10,
+                           "Prompt" => /Enter command:/)
+    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};")
+    ema.waitfor(/Enter command:/)
+    ema_response = ema.cmd("SET:HLRSUB:MSISDN,"+msisdn+":PDPCP,3;")
+    ema.cmd("LOGOUT;\n") 
+    ema.close
+    ema_response
+  end
+
+  def self.remove_apn msisdn
+    ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
+                           "Port" => self.load_config['ema_port'],
+                           "Timeout" => 10,
+                           "Prompt" => /Enter command:/)
+    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};")
+    ema.waitfor(/Enter command:/)
+    ema_response = ema.cmd("SET:HLRSUB:MSISDN,"+msisdn+":PDPCP,1;")
+    ema.cmd("LOGOUT;\n") 
+    ema.close
+    ema_response
+  end
+
+  def self.get_msisdn_ema_details(msisdn)
+    ema = Net::Telnet::new("Host" => self.load_config['ema_ip'],
+                           "Port" => self.load_config['ema_port'],
+                           "Timeout" => 10,
+                           "Prompt" => /Enter command:/)
+    ema.cmd("LOGIN:#{self.load_config['ema_user']}:#{self.load_config['ema_password']};")
+    ema.waitfor(/Enter command:/)
+    ema_response = ema.cmd("GET:HLRSUB:MSISDN,#{msisdn};")
+    ema.cmd("LOGOUT;\n") 
+    ema.close
+    ema_response
   end
 
   def self.get_imsis(msisdn)

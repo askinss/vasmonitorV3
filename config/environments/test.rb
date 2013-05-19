@@ -29,6 +29,8 @@ Vasmonitor::Application.configure do
   # ActionMailer::Base.deliveries array.
   config.action_mailer.delivery_method = :test
 
+  #load folders in models directory
+  config.autoload_paths += Dir[Rails.root.join('app', 'models', '**/')]
 
   # Print deprecation notices to the stderr
   config.active_support.deprecation = :stderr

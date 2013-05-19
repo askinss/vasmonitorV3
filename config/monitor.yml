@@ -1,0 +1,39 @@
+admin_emails: support@vas-consulting.com
+admin_numbers: 255783224291
+sdpserver:
+  ip: 127.0.0.1
+  port: 8051
+  status_shortcode: status
+  process_name: SDP-server
+
+air:
+  ip: 10.26.202.87
+  port: 10010
+  username: bblite_ucip
+  password: ucip@bblite2
+  test_msisdn: 260979411970
+
+ema:
+  ip: 10.26.204.71
+  port: 3300
+  username: bblite_ema
+  password: Airtelzm01
+  test_msisdn: 260979411970
+
+rim:
+  url: provisioning.eu.blackberry.com
+  username: bbliteZM
+  password: Airtelzm01
+  test_imsi: 645017719123095
+
+iat:
+  ip: 172.23.36.36:10030
+  username: bbliteZM
+  password: Airtelzm01
+  test_imsi: 645017719123095
+
+prepaidjob:
+  ip:
+  port:
+  log_path: /home/bblite/SDP-Scheduler-server/logs/catalina.out
+  process_name: SDP-Scheduler-server

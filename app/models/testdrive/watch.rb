@@ -1,4 +1,5 @@
 class Testdrive::Watch
+  require "securerandom"
   attr_accessor :oracleconnect
   def initialize
     @oracle = Oraclequery.new
@@ -8,8 +9,10 @@ class Testdrive::Watch
 
   def process
     Dir.foreach('/home/bblite/bbtestdrivepromo') do |file|
+      puts "Processing file #{file}"
       filename = File.join('/home/bblite/bbtestdrivepromo',file)
       File.foreach(filename) do |msisdn_from_file|
+      puts "Processing msisdn #{msisdn_from_file}"
         msisdn = msisdn_from_file.chomp
         if validate msisdn
           insert(msisdn) ? (Utilities.send_sms(Utilities.config['bbtestdrivepromo_message'], msisdn); write_processed_record_to_file msisdn) : write_failed_record_to_file(msisdn) #todo create bbtestdrivepromo_message property in the config.yml file
@@ -34,7 +37,7 @@ class Testdrive::Watch
   end
 
   def insert msisdn
-    @oracleconnect.exec("insert into bbtestdrivepromoinitial (misdn,status), values(\'#{msisdn}\', 'available')")
+    @oracleconnect.exec("insert into bbtestdrivepromoinitial (id,misdn,status), values(\'#{SecureRandom.uuid}\',\'#{msisdn}\', 'available')")
     @oracleconnect.commit
   end
 
@@ -43,7 +46,7 @@ class Testdrive::Watch
     def watch
       testdrive = Testdrive::Watch.new
       notifier = INotify::Notifier.new
-      notifier.watch("/home/bblite/bbtestdrivepromo'", :create, :delete, :modify) { puts "/home/bblite/bbtestdrivepromo"; testdrive.process }
+      notifier.watch("/home/bblite/bbtestdrivepromo", :create, :delete, :modify) { puts "Started processing files in /home/bblite/bbtestdrivepromo"; testdrive.process }
       notifier.run
     end
   end

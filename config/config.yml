@@ -11,6 +11,7 @@ enable_csv: true
 enable_transaction_report: true
 enable_activity_report: true
 send_sms_report: true
+bbtestdrivepromo_message: You have been chosen to benefit from our test drive blackberry promo, send YES to 3376 to benefit
 
 
 
@@ -76,9 +77,9 @@ send_sms_report: true
 nodes_to_monitor: air,ema,broker,rim
 adapter: mysql
 oracle_user: bblite
-oracle_password: Airtel2011
-oracle_ip: 172.27.128.122
-oracle_sid: bblitezm
+oracle_password: bblite
+oracle_ip: 10.93.85.85
+oracle_sid: bblite
 sender: SL VAS REPORTS <reports@vas-consulting.com>
 sender_password: passw0rd$
 opco: Sierria Leone

@@ -42,12 +42,16 @@ class Testdrive::Watch
     @oracleconnect.commit
   end
 
+  def logoff
+    @oracle.logoff
+  end
+
   class << self
     require 'rb-inotify'
     def watch
       testdrive = Testdrive::Watch.new
       notifier = INotify::Notifier.new
-      notifier.watch("/home/bblite/bbtestdrivepromo", :create, :delete, :modify) { puts "Started processing files in /home/bblite/bbtestdrivepromo"; testdrive.process }
+      notifier.watch("/home/bblite/bbtestdrivepromo", :create, :delete, :modify) { puts "Started processing files in /home/bblite/bbtestdrivepromo"; testdrive.process; testdrive.logoff }
       notifier.run
     end
   end

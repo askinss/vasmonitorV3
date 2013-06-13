@@ -9,13 +9,14 @@ class Testdrive::Watch
 
   def process
     Dir.foreach('/home/bblite/bbtestdrivepromo') do |file|
+      next if file == '.' or file == '..'
       puts "Processing file #{file}"
       filename = File.join('/home/bblite/bbtestdrivepromo',file)
       File.foreach(filename) do |msisdn_from_file|
       puts "Processing msisdn #{msisdn_from_file}"
         msisdn = msisdn_from_file.chomp
         if validate msisdn
-          insert(msisdn) ? (Utilities.send_sms(Utilities.config['bbtestdrivepromo_message'], msisdn); write_processed_record_to_file msisdn) : write_failed_record_to_file(msisdn) #todo create bbtestdrivepromo_message property in the config.yml file
+          insert(msisdn) ? (Utilities.sendsms(Utilities.load_config['bbtestdrivepromo_message'], msisdn); write_processed_record_to_file msisdn) : write_failed_record_to_file(msisdn)
         else
           write_failed_record_to_file msisdn
         end
@@ -25,7 +26,7 @@ class Testdrive::Watch
   end
 
   def validate msisdn
-    msisdn.match /^233\d{8}$/
+    msisdn.match /^233\d{9}$/
   end
 
   def write_processed_record_to_file msisdn
@@ -37,7 +38,7 @@ class Testdrive::Watch
   end
 
   def insert msisdn
-    @oracleconnect.exec("insert into bbtestdrivepromoinitial (id,misdn,status), values(\'#{SecureRandom.uuid}\',\'#{msisdn}\', 'available')")
+    @oracleconnect.exec("insert into bbtestdrivepromoinitial (id,MSISDN,status,date_created) VALUES(\'#{SecureRandom.uuid}\',\'#{msisdn}\', 'available', sysdate)")
     @oracleconnect.commit
   end
 

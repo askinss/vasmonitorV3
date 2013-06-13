@@ -226,10 +226,11 @@ class Utilities
     kannelurl = 'http://127.0.0.1:13009/cgi-bin/sendsms'
     uri = URI(kannelurl)
     receipients.to_s.split(",").each do |receipient|
-      params = {:username => 'admin', :password => 'password', :to => receipient.to_s, :text => message }
+      params = {:username => 'admin', :password => 'password', :to => receipient.to_s, :text => message, :from => 3379 }
       uri.query = URI.encode_www_form(params)
       begin
         res = Net::HTTP.get_response(uri)
+        puts res.code
       rescue => e
         e.backtrace
       end

@@ -38,8 +38,12 @@ class Testdrive::Watch
   end
 
   def insert msisdn
-    @oracleconnect.exec("insert into bbtestdrivepromoinitial (id,MSISDN,status,date_created) VALUES(\'#{SecureRandom.uuid}\',\'#{msisdn}\', 'available', sysdate)")
-    @oracleconnect.commit
+    begin
+      @oracleconnect.exec("insert into bbtestdrivepromoinitial (id,MSISDN,status,date_created) VALUES(\'#{SecureRandom.uuid}\',\'#{msisdn}\', 'available', sysdate)")
+      @oracleconnect.commit
+    rescue OCIError => e
+      Rails.logger.error(e.backtrace.join("\n"))
+    end
   end
 
   def logoff
@@ -51,7 +55,7 @@ class Testdrive::Watch
     def watch
       testdrive = Testdrive::Watch.new
       notifier = INotify::Notifier.new
-      notifier.watch("/home/bblite/bbtestdrivepromo", :create, :delete, :modify) { puts "Started processing files in /home/bblite/bbtestdrivepromo"; testdrive.process; testdrive.logoff }
+      notifier.watch("/home/bblite/bbtestdrivepromo", :create, :delete, :modify, :moved_to, :moved_from) { puts "Started processing files in /home/bblite/bbtestdrivepromo"; testdrive.process; testdrive.logoff }
       notifier.run
     end
   end

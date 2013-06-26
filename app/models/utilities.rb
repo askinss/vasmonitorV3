@@ -353,7 +353,7 @@ msg  = part1 + msg + part3
               File.open(File.join(Rails.root, 'dumps','fail_to_deactivate_imsis'), 'ab') { |f| f.puts threaded_imsi }
             end
           rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError, Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => e
-            File.open(File.join(Rails.root, 'dumps','exceptions'), 'ab') { |f| f.puts e.backtrace }
+            Rails.logger.error f.puts e.backtrace.join("\n")
           end
         end
       end
